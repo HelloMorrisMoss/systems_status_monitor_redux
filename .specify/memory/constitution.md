@@ -1,50 +1,63 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Dashboard Server App Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Ship a Working Dashboard (Minimum Scope)
+The app MUST provide, at minimum:
+- A running HTTP server with a **health endpoint** (e.g., `/health`) returning success when the process is ready.
+- At least one **dashboard route** (HTML and/or JSON) that renders/returns meaningful status data.
+- A clear **startup command** and a single, documented **configuration method** (environment variables preferred).
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Secure by Default
+The app MUST:
+- Bind to a safe interface by default (e.g., `127.0.0.1`) unless explicitly configured otherwise.
+- Never log secrets. Any sensitive values MUST be redacted or omitted.
+- Validate and sanitize all external inputs (query params, headers, body).
+- Use authentication/authorization if exposed beyond localhost; if not implemented, it MUST be explicitly documented as “local-only”.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Reliability & Correctness Over Cleverness
+The app MUST:
+- Fail fast on invalid configuration with actionable error messages.
+- Provide deterministic behavior (no reliance on timing hacks).
+- Handle expected failures gracefully (timeouts, upstream errors, empty datasets) with clear user-facing messages and proper HTTP status codes.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Observability Is Non‑Optional
+The app MUST include:
+- Structured logging (at least: timestamp, level, message, request path, status code, latency).
+- A minimal request log for every HTTP request (success and error).
+- An error path that captures stack traces in logs (server-side only), while returning safe error responses to clients.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Compatibility, Simplicity, and Explicit Contracts
+The app MUST:
+- Pin to a supported Python runtime (Python 3.11.x).
+- Keep dependencies minimal and justified.
+- Define explicit response contracts for any JSON endpoints (fields, types, and error format documented).
+- Prefer simple, maintainable design (YAGNI). No abstractions without clear payoff.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Minimum Operational Requirements
+- **Configuration**: via environment variables; defaults must be safe.
+- **Ports**: configurable; collisions must produce a clear startup failure.
+- **Health/Readiness**: `/health` (liveness) and, if the app depends on upstreams, a `/ready` (readiness) endpoint.
+- **Timeouts**: outbound calls MUST have timeouts; no unbounded waits.
+- **Static assets** (if any): must be served correctly or bundled/managed explicitly (no “works on my machine” paths).
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+## Development Workflow & Quality Gates
+- Every change MUST include one of:
+  - a unit test, or
+  - an integration test, or
+  - a written justification for why testing is not applicable.
+- CI/local runs MUST be documented and reproducible.
+- Before merging:
+  - lint/format checks pass (or the project documents why not used),
+  - tests pass,
+  - `/health` behavior is unchanged unless explicitly intended and documented.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+- This constitution is the source of truth for minimum requirements.
+- Any exception MUST be documented in the PR/commit message and revisited.
+- Amendments require:
+  - a short rationale,
+  - migration notes (if behavior changes),
+  - version bump.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
-
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-02-09 | **Last Amended**: 2026-02-09
