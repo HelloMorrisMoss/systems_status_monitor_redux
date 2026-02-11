@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAN Monitor Dashboard</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 24px; }
+        .refresh-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .refresh-btn:hover { background: #0056b3; }
+        .refresh-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .system-box { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; border-top: 5px solid #ccc; }
+        .system-box.OK { border-top-color: #28a745; }
+        .system-box.WARNING { border-top-color: #ffc107; }
+        .system-box.CRITICAL { border-top-color: #dc3545; }
+        .system-box.UNKNOWN { border-top-color: #6c757d; }
+        .system-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .system-address { font-size: 14px; color: #666; margin-bottom: 15px; }
+        .last-checked { font-size: 12px; color: #999; margin-top: 15px; }
+        .stale-badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; font-weight: bold; }
+        .checks { list-style: none; padding: 0; margin: 0; }
+        .check-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .check-item:last-child { border-bottom: none; }
+        .status-badge { font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
+        .status-badge.OK { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.WARNING { background: #fffde7; color: #f9a825; }
+        .status-badge.CRITICAL { background: #ffebee; color: #c62828; }
+        .status-badge.UNKNOWN { background: #f5f5f5; color: #616161; }
+        .failure-category { color: #dc3545; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>LAN Monitor Dashboard</h1>
+        <button id="refresh-all" class="refresh-btn">Refresh All</button>
+    </header>
+
+    <div class="grid">
+        {% for sys in systems %}
+        <div class="system-box {{ sys.status.overall_status }}">
+            <div class="system-name">{{ sys.name }}</div>
+            <div class="system-address">{{ sys.address }}</div>
+            
+            {% if sys.status.failure_category != "none" %}
+            <div class="failure-category">Error: {{ sys.status.failure_category }}</div>
+            {% endif %}
+
+            <ul class="checks">
+                {% for check in sys.status.check_results %}
+                <li class="check-item">
+                    <span>{{ check.check_id }}</span>
+                    <div>
+                        <span class="status-badge {{ check.status }}">{{ check.status }}</span>
+                        <div style="font-size: 11px; color: #666; text-align: right;">{{ check.summary }}</div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="last-checked">
+                Last checked: {{ sys.status.last_checked.strftime('%Y-%m-%d %H:%M:%S') if sys.status.last_checked else 'Never' }}
+                {% if sys.is_stale %}
+                <span class="stale-badge">STALE</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.getElementById('refresh-all').addEventListener('click', async function() {
+            this.disabled = true;
+            this.textContent = 'Refreshing...';
+            try {
+                const response = await fetch('/api/refresh', { method: 'POST' });
+                if (response.ok) {
+                    // Wait a bit for the background refresh to start/complete before reloading
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    alert('Refresh failed');
+                    this.disabled = false;
+                    this.textContent = 'Refresh All';
+                }
+            } catch (e) {
+                alert('Error triggering refresh');
+                this.disabled = false;
+                this.textContent = 'Refresh All';
+            }
+        });
+
+        // Auto-reload every 30 seconds
+        setInterval(() => location.reload(), 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+import threading
+import time
+import logging
+from datetime import datetime
+from typing import List, Optional
+from src.models.entities import MonitoredSystem, SystemStatusSummary, CheckResult, Status, FailureCategory
+from src.monitor.ssh_client import SSHClientWrapper
+from src.monitor.commands import get_check_command
+from src.monitor.evaluators import get_evaluator
+from src.monitor.store import store, rollup_status
+
+logger = logging.getLogger(__name__)
+
+class MonitorScheduler:
+    def __init__(self, systems: List[MonitoredSystem], interval: int = 30):
+        self.systems = systems
+        self.interval = interval
+        self._stop_event = threading.Event()
+        self._thread: Optional[threading.Thread] = None
+        self._refresh_lock = threading.Lock()
+
+    def start(self):
+        if self._thread and self._thread.is_alive():
+            return
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+        logger.info(f"Monitor scheduler started with interval {self.interval}s")
+
+    def stop(self):
+        self._stop_event.set()
+        if self._thread:
+            self._thread.join(timeout=5)
+        logger.info("Monitor scheduler stopped")
+
+    def _run(self):
+        while not self._stop_event.is_set():
+            self.refresh_all()
+            # Wait for interval or stop event
+            self._stop_event.wait(self.interval)
+
+    def refresh_all(self):
+        if not self._refresh_lock.acquire(blocking=False):
+            logger.info("Refresh already in progress, skipping")
+            return
+        
+        try:
+            logger.info(f"Starting refresh for {len(self.systems)} systems")
+            threads = []
+            for system in self.systems:
+                t = threading.Thread(target=self._refresh_system, args=(system,))
+                t.start()
+                threads.append(t)
+            
+            for t in threads:
+                t.join()
+            logger.info("Refresh complete")
+        finally:
+            self._refresh_lock.release()
+
+    def _refresh_system(self, system: MonitoredSystem):
+        logger.info(f"Refreshing system {system.name} ({system.address})")
+        results = []
+        failure_category = FailureCategory.NONE
+        
+        with SSHClientWrapper(system.address, system.username, system.password.get_secret_value()) as client:
+            success, category, msg = client.connect()
+            if not success:
+                summary = SystemStatusSummary(
+                    system_id=system.id,
+                    overall_status=Status.CRITICAL,
+                    last_checked=datetime.utcnow(),
+                    check_results=[],
+                    failure_category=category or FailureCategory.CHECK_FAILED
+                )
+                store.update_system_status(summary)
+                return
+
+            for check_def in system.checks:
+                cmd = get_check_command(check_def.type, check_def.command)
+                exit_status, stdout, stderr = client.execute(cmd)
+                
+                evaluator = get_evaluator(check_def.type)
+                if evaluator:
+                    res = evaluator(check_def, stdout, stderr, exit_status)
+                    results.append(res)
+                else:
+                    results.append(CheckResult(
+                        check_id=check_def.id,
+                        status=Status.UNKNOWN,
+                        summary=f"Unknown check type: {check_def.type}"
+                    ))
+
+        summary = SystemStatusSummary(
+            system_id=system.id,
+            overall_status=rollup_status(results),
+            last_checked=datetime.utcnow(),
+            check_results=results,
+            failure_category=FailureCategory.NONE
+        )
+        store.update_system_status(summary)
