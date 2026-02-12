@@ -40,12 +40,12 @@
 
     <div class="grid">
         {% for sys in systems %}
-        <div class="system-box {{ sys.status.overall_status }}">
+        <div class="system-box {{ sys.status.overall_status.value }}">
             <div class="system-name">{{ sys.name }}</div>
             <div class="system-address">{{ sys.address }}</div>
-            
-            {% if sys.status.failure_category != "none" %}
-            <div class="failure-category">Error: {{ sys.status.failure_category }}</div>
+
+            {% if sys.status.failure_category.value != "none" %}
+            <div class="failure-category">Error: {{ sys.status.failure_category.value }}</div>
             {% endif %}
 
             <ul class="checks">
@@ -53,7 +53,7 @@
                 <li class="check-item">
                     <span>{{ check.check_id }}</span>
                     <div>
-                        <span class="status-badge {{ check.status }}">{{ check.status }}</span>
+                        <span class="status-badge {{ check.status.value }}">{{ check.status.value }}</span>
                         <div style="font-size: 11px; color: #666; text-align: right;">{{ check.summary }}</div>
                     </div>
                 </li>
