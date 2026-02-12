@@ -1,0 +1,181 @@
+/* ========== VARIABLES ========== */
+
+html {
+  --header-height: 4em;
+  --footer-height: 2em;
+}
+
+/* Light mode (default) */
+:root{
+  --bg: #f4f7f6;
+  --text: #333;
+  --muted: #666;
+  --muted2: #999;
+
+  --card-bg: #ffffff;
+  --card-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  --divider: #eee;
+
+  --primary: #007bff;
+  --primary-hover: #0056b3;
+
+  --ok: #28a745;
+  --warn: #ffc107;
+  --crit: #dc3545;
+  --unk: #6c757d;
+
+  --badge-ok-bg: #e8f5e9;
+  --badge-ok-fg: #2e7d32;
+  --badge-warn-bg: #fffde7;
+  --badge-warn-fg: #f9a825;
+  --badge-crit-bg: #ffebee;
+  --badge-crit-fg: #c62828;
+  --badge-unk-bg: #f5f5f5;
+  --badge-unk-fg: #616161;
+}
+
+/* Manual toggle: dark (highest priority) */
+html[data-theme="dark"]{
+  --bg: #0f141a;
+  --text: #e6edf3;
+  --muted: #9aa4ad;
+  --muted2: #7f8a94;
+
+  --card-bg: #151b23;
+  --card-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  --divider: #263041;
+
+  --primary: #2f81f7;
+  --primary-hover: #1f6feb;
+
+  /* keep these defined so borders/badges are stable */
+  --ok: #28a745;
+  --warn: #ffc107;
+  --crit: #dc3545;
+  --unk: #6c757d;
+
+  --badge-ok-bg: rgba(46, 125, 50, 0.18);
+  --badge-ok-fg: #7ee787;
+  --badge-warn-bg: rgba(249, 168, 37, 0.18);
+  --badge-warn-fg: #f2cc60;
+  --badge-crit-bg: rgba(198, 40, 40, 0.18);
+  --badge-crit-fg: #ff7b72;
+  --badge-unk-bg: rgba(97, 97, 97, 0.20);
+  --badge-unk-fg: #c9d1d9;
+}
+
+/* OS/browser preference: apply dark if user has NOT forced light */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --bg: #0f141a;
+    --text: #e6edf3;
+    --muted: #9aa4ad;
+    --muted2: #7f8a94;
+
+    --card-bg: #151b23;
+    --card-shadow: 0 6px 20px rgba(0,0,0,0.35);
+    --divider: #263041;
+
+    --primary: #2f81f7;
+    --primary-hover: #1f6feb;
+
+    --ok: #28a745;
+    --warn: #ffc107;
+    --crit: #dc3545;
+    --unk: #6c757d;
+
+    --badge-ok-bg: rgba(46, 125, 50, 0.18);
+    --badge-ok-fg: #7ee787;
+    --badge-warn-bg: rgba(249, 168, 37, 0.18);
+    --badge-warn-fg: #f2cc60;
+    --badge-crit-bg: rgba(198, 40, 40, 0.18);
+    --badge-crit-fg: #ff7b72;
+    --badge-unk-bg: rgba(97, 97, 97, 0.20);
+    --badge-unk-fg: #c9d1d9;
+  }
+}
+
+/* Optional: stale badge readability in dark */
+html[data-theme="dark"] .stale-badge { color: #111; }
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) .stale-badge { color: #111; }
+}
+
+
+/* ========== LAYOUT / COMPONENT STYLES ========== */
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 20px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;
+  height: var(--header-height); }
+main { flex: 1 1 auto; min-height: 0; overflow: auto; }
+footer { font-size: 0.5em; min-height: 2em; height: var(--footer-height) }
+h1 { margin: 0; font-size: 24px; }
+
+.refresh-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.refresh-btn:hover { background: var(--primary-hover); }
+.refresh-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+
+
+.system-box {
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  padding: 20px;
+  border-top: 5px solid #ccc;
+}
+.system-box.OK { border-top-color: var(--ok); }
+.system-box.WARNING { border-top-color: var(--warn); }
+.system-box.CRITICAL { border-top-color: var(--crit); }
+.system-box.UNKNOWN { border-top-color: var(--unk); }
+
+.system-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+.system-address { font-size: 14px; color: var(--muted); margin-bottom: 15px; }
+
+.last-checked { font-size: 12px; color: var(--muted2); margin-top: 15px; }
+
+.stale-badge {
+  background: var(--warn);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+.checks { list-style: none; padding: 0; margin: 0; }
+.check-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--divider); }
+.check-item:last-child { border-bottom: none; }
+
+.status-badge { font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
+.status-badge.OK { background: var(--badge-ok-bg); color: var(--badge-ok-fg); }
+.status-badge.WARNING { background: var(--badge-warn-bg); color: var(--badge-warn-fg); }
+.status-badge.CRITICAL { background: var(--badge-crit-bg); color: var(--badge-crit-fg); }
+.status-badge.UNKNOWN { background: var(--badge-unk-bg); color: var(--badge-unk-fg); }
+
+.failure-category { color: var(--crit); font-weight: bold; margin-bottom: 10px; font-size: 14px; }

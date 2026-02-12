@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime, timezone
 import os
 
@@ -21,6 +22,10 @@ app.middleware("http")(request_logger_middleware)
 
 # Template engine
 templates = Jinja2Templates(directory="src/templates")
+
+# Static assets (CSS, etc.)
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
+app.mount("/images", StaticFiles(directory="src/images"), name="images")
 
 # Load systems and start scheduler
 SYSTEMS_CONFIG_PATH = os.getenv("SYSTEMS_CONFIG_PATH", "systems.json")

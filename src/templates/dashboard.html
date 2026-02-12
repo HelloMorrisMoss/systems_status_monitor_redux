@@ -4,40 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LAN Monitor Dashboard</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #f4f7f6; color: #333; margin: 0; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        h1 { margin: 0; font-size: 24px; }
-        .refresh-btn { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .refresh-btn:hover { background: #0056b3; }
-        .refresh-btn:disabled { background: #ccc; cursor: not-allowed; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .system-box { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; border-top: 5px solid #ccc; }
-        .system-box.OK { border-top-color: #28a745; }
-        .system-box.WARNING { border-top-color: #ffc107; }
-        .system-box.CRITICAL { border-top-color: #dc3545; }
-        .system-box.UNKNOWN { border-top-color: #6c757d; }
-        .system-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-        .system-address { font-size: 14px; color: #666; margin-bottom: 15px; }
-        .last-checked { font-size: 12px; color: #999; margin-top: 15px; }
-        .stale-badge { background: #ffc107; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px; font-weight: bold; }
-        .checks { list-style: none; padding: 0; margin: 0; }
-        .check-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-        .check-item:last-child { border-bottom: none; }
-        .status-badge { font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; }
-        .status-badge.OK { background: #e8f5e9; color: #2e7d32; }
-        .status-badge.WARNING { background: #fffde7; color: #f9a825; }
-        .status-badge.CRITICAL { background: #ffebee; color: #c62828; }
-        .status-badge.UNKNOWN { background: #f5f5f5; color: #616161; }
-        .failure-category { color: #dc3545; font-weight: bold; margin-bottom: 10px; font-size: 14px; }
-    </style>
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <link rel="icon" type="image/x-icon" href="/images/activity-svgrepo-com.svg">
+    <link rel="icon" type="image/x-icon" href="/images/activity-svgrepo-com.svg" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/x-icon" href="/images/activity-svgrepo-com-light.svg" media="(prefers-color-scheme: dark)">
+
 </head>
 <body>
     <header>
         <h1>LAN Monitor Dashboard</h1>
-        <button id="refresh-all" class="refresh-btn">Refresh All</button>
+        <div class="header-actions">
+            <button id="theme-toggle" class="theme-btn" type="button" aria-label="Toggle theme">
+                Theme: System
+            </button>
+            <button id="refresh-all" class="refresh-btn">Refresh All</button>
+        </div>
     </header>
 
+    <main>
     <div class="grid">
         {% for sys in systems %}
         <div class="system-box {{ sys.status.overall_status.value }}">
@@ -69,6 +53,59 @@
         </div>
         {% endfor %}
     </div>
+    </main>
+    <footer>
+        <div class="footer-icon">
+                <img width="20px"
+                     alt="A simple monochrome stylized heartbeat monitor icon. A line which zigzags on a square background."
+                     src=
+             "/images/activity-svgrepo-com.svg"> Monitor icon by <a target="_blank" href="https://www.svgrepo.com/svg/535117/activity">Noah Jacobus on SVG Repo</a>
+        </div>
+    </footer>
+    <script>
+        (function () {
+            const STORAGE_KEY = 'lanmon.theme'; // 'system' | 'light' | 'dark'
+            const btn = document.getElementById('theme-toggle');
+
+            function applyTheme(mode) {
+                console.log('Applying theme:', mode);
+                const root = document.documentElement;
+                if (mode === 'dark') {
+                    root.setAttribute('data-theme', 'dark');
+                    btn.textContent = 'Theme: Dark';
+                } else if (mode === 'light') {
+                    root.setAttribute('data-theme', 'light');
+                    btn.textContent = 'Theme: Light';
+                } else {
+                    root.removeAttribute('data-theme');
+                    btn.textContent = 'Theme: System';
+                }
+            }
+
+            function getStoredTheme() {
+                const v = localStorage.getItem(STORAGE_KEY);
+                return (v === 'light' || v === 'dark' || v === 'system') ? v : 'system';
+            }
+
+            function cycleTheme(current) {
+                // System -> Dark -> Light -> System ...
+                if (current === 'system') return 'dark';
+                if (current === 'dark') return 'light';
+                return 'system';
+            }
+
+            // Initial load
+            const initial = getStoredTheme();
+            applyTheme(initial);
+
+            btn.addEventListener('click', function () {
+                const current = getStoredTheme();
+                const next = cycleTheme(current);
+                localStorage.setItem(STORAGE_KEY, next);
+                applyTheme(next);
+            });
+        })();
+    </script>
 
     <script>
         document.getElementById('refresh-all').addEventListener('click', async function() {
