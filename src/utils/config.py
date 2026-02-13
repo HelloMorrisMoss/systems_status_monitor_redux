@@ -17,7 +17,7 @@ def _env_str(name: str, default: str) -> str:
 
 @dataclass(frozen=True)
 class AppConfig:
-    bind_host: str = _env_str("BIND_HOST", "127.0.0.1")
+    bind_host: str = _env_str("BIND_HOST", "0.0.0.0")
     port: int = _env_int("PORT", 8000)
     refresh_interval_seconds: int = _env_int("REFRESH_INTERVAL_SECONDS", 30)
     staleness_window_seconds: int = _env_int("STALENESS_WINDOW_SECONDS", 120)
