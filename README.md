@@ -46,7 +46,7 @@ Example `systems.json`:
 ```
 
 ### Environment Variables
-- `BIND_HOST`: Address to bind to (default: `127.0.0.1`)
+- `BIND_HOST`: Address to bind to (default: `0.0.0.0`)
 - `PORT`: Port to listen on (default: `8000`)
 - `SYSTEMS_CONFIG_PATH`: Path to the systems config (default: `systems.json`)
 - `REFRESH_INTERVAL_SECONDS`: Interval between auto-refreshes (default: `30`)
@@ -56,7 +56,11 @@ Example `systems.json`:
 ```powershell
 uv run python -m systems_status_monitor_redux.main
 ```
-The dashboard will be available at `http://127.0.0.1:8000`.
+or
+```powershell
+uv run systems-status-monitor-redux
+```
+The dashboard will be available at `http://localhost:8000` or `http://system_address:8000` remotely.
 
 ## Health Check
 Verify the service is running:
