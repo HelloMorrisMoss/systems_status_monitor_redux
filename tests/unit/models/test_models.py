@@ -1,7 +1,7 @@
 import pytest
 import json
-from src.models.entities import MonitoredSystem, Status, FailureCategory
-from src.models.config_loader import load_systems_config
+from systems_status_monitor_redux.models.entities import MonitoredSystem
+from systems_status_monitor_redux.models.config_loader import load_systems_config
 
 def test_monitored_system_pydantic_validation():
     data = {

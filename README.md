@@ -54,7 +54,7 @@ Example `systems.json`:
 
 ## Running the App
 ```powershell
-uv run python -m src.main
+uv run python -m systems_status_monitor_redux.main
 ```
 The dashboard will be available at `http://127.0.0.1:8000`.
 

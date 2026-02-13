@@ -1,6 +1,5 @@
-import pytest
-from src.monitor.store import StatusStore, rollup_status
-from src.models.entities import SystemStatusSummary, Status, CheckResult, FailureCategory
+from systems_status_monitor_redux.monitor.store import StatusStore, rollup_status
+from systems_status_monitor_redux.models.entities import SystemStatusSummary, Status, CheckResult
 from datetime import datetime
 
 def test_rollup_status():

@@ -1,8 +1,7 @@
 import threading
 import logging
 from typing import Dict, List, Optional
-from datetime import datetime
-from src.models.entities import SystemStatusSummary, Status, CheckResult, FailureCategory
+from systems_status_monitor_redux.models.entities import SystemStatusSummary, Status, CheckResult
 
 logger = logging.getLogger(__name__)
 

@@ -2,15 +2,17 @@ from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from datetime import datetime, timezone
+from datetime import datetime
 import os
+from pathlib import Path
 
-from src.utils.config import load_config
-from src.utils.logging import configure_logging, request_logger_middleware, json_log
-from src.models.config_loader import load_systems_config
-from src.monitor.scheduler import MonitorScheduler
-from src.monitor.store import store, StatusStore
-from src.models.entities import Status, FailureCategory
+from systems_status_monitor_redux.utils.config import load_config
+from systems_status_monitor_redux.utils.logging import configure_logging, request_logger_middleware, json_log
+from systems_status_monitor_redux.models.config_loader import load_systems_config
+from systems_status_monitor_redux.monitor.scheduler import MonitorScheduler
+from systems_status_monitor_redux.monitor.store import store
+from systems_status_monitor_redux.models.entities import Status, FailureCategory
+
 
 config = load_config()
 
@@ -20,12 +22,18 @@ app = FastAPI(title="LAN Monitor Dashboard", version=config.version)
 configure_logging()
 app.middleware("http")(request_logger_middleware)
 
-# Template engine
-templates = Jinja2Templates(directory="src/templates")
 
-# Static assets (CSS, etc.)
-app.mount("/static", StaticFiles(directory="src/static"), name="static")
-app.mount("/images", StaticFiles(directory="src/images"), name="images")
+PKG_DIR = Path(__file__).resolve().parent
+STATIC_DIR = PKG_DIR / "static"
+IMAGES_DIR = PKG_DIR / "images"
+TEMPLATES_DIR = PKG_DIR / "templates"
+
+# Template engine
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+# Static assets (CSS, images etc.)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/images", StaticFiles(directory=STATIC_DIR), name="images")
 
 # Load systems and start scheduler
 SYSTEMS_CONFIG_PATH = os.getenv("SYSTEMS_CONFIG_PATH", "systems.json")
@@ -92,9 +100,13 @@ async def trigger_refresh(background_tasks: BackgroundTasks):
     return JSONResponse({"status": "refresh triggered"}, status_code=202)
 
 
-if __name__ == "__main__":
-    # Enable running via: python -m src.main
+def start_server():
     import uvicorn
 
     json_log(level="INFO", msg="startup", bind_host=config.bind_host, port=config.port, version=config.version)
-    uvicorn.run("src.main:app", host=config.bind_host, port=config.port, reload=False)
+    uvicorn.run("systems_status_monitor_redux.main:app", host=config.bind_host, port=config.port, reload=False)
+
+
+if __name__ == "__main__":
+    # Enable running via: python -m systems_status_monitor_redux.main
+    start_server()

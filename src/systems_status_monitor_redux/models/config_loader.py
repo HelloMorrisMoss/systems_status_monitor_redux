@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import List
 from pydantic import TypeAdapter
-from src.models.entities import MonitoredSystem
+from systems_status_monitor_redux.models.entities import MonitoredSystem
 
 def load_systems_config(config_path: str) -> List[MonitoredSystem]:
     path = Path(config_path)

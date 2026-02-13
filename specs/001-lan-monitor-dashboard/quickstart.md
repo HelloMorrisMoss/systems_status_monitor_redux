@@ -54,12 +54,12 @@ Example `systems.json`:
 
 ## Running the App
 ```powershell
-uv run python -m src.main
+uv run python -m systems_status_monitor_redux.main
 ```
-The dashboard will be available at `http://127.0.0.1:8000`.
+The dashboard will be available at `http://0.0.0.0:8000`.
 
 ## Health Check
 Verify the service is running:
 ```powershell
-Invoke-RestMethod http://127.0.0.1:8000/health
+Invoke-RestMethod http://0.0.0.0:8000/health
 ```

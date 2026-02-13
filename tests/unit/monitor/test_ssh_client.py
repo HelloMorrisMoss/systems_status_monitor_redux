@@ -1,7 +1,6 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from src.monitor.ssh_client import SSHClientWrapper
-from src.models.entities import FailureCategory
+from systems_status_monitor_redux.monitor.ssh_client import SSHClientWrapper
+from systems_status_monitor_redux.models.entities import FailureCategory
 import paramiko
 import socket
 

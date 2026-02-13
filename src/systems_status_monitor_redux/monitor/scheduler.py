@@ -1,13 +1,12 @@
 import threading
-import time
 import logging
 from datetime import datetime
 from typing import List, Optional
-from src.models.entities import MonitoredSystem, SystemStatusSummary, CheckResult, Status, FailureCategory
-from src.monitor.ssh_client import SSHClientWrapper
-from src.monitor.commands import get_check_command
-from src.monitor.evaluators import get_evaluator
-from src.monitor.store import store, rollup_status
+from systems_status_monitor_redux.models.entities import MonitoredSystem, SystemStatusSummary, CheckResult, Status, FailureCategory
+from systems_status_monitor_redux.monitor.ssh_client import SSHClientWrapper
+from systems_status_monitor_redux.monitor.commands import get_check_command
+from systems_status_monitor_redux.monitor.evaluators import get_evaluator
+from systems_status_monitor_redux.monitor.store import store, rollup_status
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,6 @@
 import re
 import logging
-from typing import List, Optional
-from src.models.entities import CheckResult, Status, CheckDefinition, Rule
+from systems_status_monitor_redux.models.entities import CheckResult, Status, CheckDefinition
 
 logger = logging.getLogger(__name__)
 

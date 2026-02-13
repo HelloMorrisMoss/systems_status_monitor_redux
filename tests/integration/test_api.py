@@ -1,8 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
-from src.main import app
-from src.monitor.store import store
-from src.models.entities import SystemStatusSummary, Status, FailureCategory
+from systems_status_monitor_redux.main import app
+from systems_status_monitor_redux.monitor.store import store
+from systems_status_monitor_redux.models.entities import SystemStatusSummary, Status
 from datetime import datetime
 
 @pytest.fixture

@@ -1,6 +1,5 @@
-import pytest
-from src.monitor.evaluators import evaluate_time, evaluate_disk, evaluate_custom
-from src.models.entities import CheckDefinition, Status, Rule
+from systems_status_monitor_redux.monitor.evaluators import evaluate_time, evaluate_disk, evaluate_custom
+from systems_status_monitor_redux.models.entities import CheckDefinition, Status, Rule
 
 def test_evaluate_time():
     check_def = CheckDefinition(id="t1", name="Time", type="time")

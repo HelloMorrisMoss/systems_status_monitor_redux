@@ -2,7 +2,7 @@ import paramiko
 import logging
 import socket
 from typing import Tuple, Optional
-from src.models.entities import FailureCategory
+from systems_status_monitor_redux.models.entities import FailureCategory
 
 logger = logging.getLogger(__name__)
 
