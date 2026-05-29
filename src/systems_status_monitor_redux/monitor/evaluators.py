@@ -142,10 +142,64 @@ def evaluate_custom(check_def: CheckDefinition, stdout: str, stderr: str, exit_s
         details=stdout[:1000]
     )
 
+def evaluate_http(check_def: CheckDefinition, stdout: str, stderr: str, exit_status: int) -> CheckResult:
+    """
+    Evaluates HTTP GET response.
+    stdout: response body
+    exit_status: HTTP status code (or -1 for connection error)
+    stderr: error message
+    """
+    if exit_status == -1:
+        return CheckResult(
+            check_id=check_def.id,
+            status=Status.CRITICAL,
+            summary="Connection failed",
+            details=stderr
+        )
+
+    expected_status = check_def.params.get("status_code", 200)
+    if exit_status != expected_status:
+        return CheckResult(
+            check_id=check_def.id,
+            status=Status.CRITICAL,
+            summary=f"Unexpected status code: {exit_status} (expected {expected_status})",
+            details=stdout[:1000]
+        )
+
+    # Re-use custom evaluator's rule logic for content checking if needed
+    for rule in check_def.rules:
+        match = False
+        if rule.type == "contains":
+            match = rule.pattern in stdout
+        elif rule.type == "not_contains":
+            match = rule.pattern not in stdout
+        elif rule.type == "regex":
+            try:
+                match = bool(re.search(rule.pattern, stdout))
+            except Exception as e:
+                logger.error(f"Invalid regex '{rule.pattern}': {e}")
+                continue
+        
+        if not match:
+            return CheckResult(
+                check_id=check_def.id,
+                status=Status.CRITICAL,
+                summary=f"Rule failed: {rule.type} '{rule.pattern}'",
+                details=stdout[:1000]
+            )
+
+    return CheckResult(
+        check_id=check_def.id,
+        status=Status.OK,
+        summary=f"HTTP GET OK ({exit_status})",
+        details=stdout[:1000]
+    )
+
 def get_evaluator(check_type: str):
     evaluators = {
         "time": evaluate_time,
         "disk": evaluate_disk,
-        "custom": evaluate_custom
+        "custom": evaluate_custom,
+        "http": evaluate_http
     }
     return evaluators.get(check_type)

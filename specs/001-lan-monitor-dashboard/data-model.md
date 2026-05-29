@@ -18,9 +18,9 @@ The system follows a simple Producer-Consumer model where a background scheduler
 - `checks`: List[CheckDefinition]
 
 ### CheckDefinition
-- `type`: "time" | "disk" | "custom"
-- `params`: Dict (e.g., `{"drive": "C:"}`, `{"command": "tasklist"}`)
-- `rules`: List[Rule] (for custom commands)
+- `type`: "time" | "disk" | "custom" | "http"
+- `params`: Dict (e.g., `{"drive": "C:"}`, `{"command": "tasklist"}`, `{"url": "http://localhost:8080/health"}`)
+- `rules`: List[Rule] (for custom commands and HTTP content)
 
 ### CheckResult
 - `status`: "OK" | "WARNING" | "CRITICAL" | "UNKNOWN"

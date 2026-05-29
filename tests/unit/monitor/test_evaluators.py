@@ -1,4 +1,4 @@
-from systems_status_monitor_redux.monitor.evaluators import evaluate_time, evaluate_disk, evaluate_custom
+from systems_status_monitor_redux.monitor.evaluators import evaluate_time, evaluate_disk, evaluate_custom, evaluate_http
 from systems_status_monitor_redux.models.entities import CheckDefinition, Status, Rule
 
 def test_evaluate_time():
@@ -45,4 +45,35 @@ def test_evaluate_custom_regex():
     assert res.status == Status.OK
     
     res2 = evaluate_custom(check_def, "no units found", "", 0)
+    assert res2.status == Status.CRITICAL
+
+def test_evaluate_http_ok():
+    check_def = CheckDefinition(id="h1", name="HTTP", type="http", params={"status_code": 200})
+    res = evaluate_http(check_def, "OK body", "", 200)
+    assert res.status == Status.OK
+    assert "200" in res.summary
+
+def test_evaluate_http_fail_status():
+    check_def = CheckDefinition(id="h1", name="HTTP", type="http", params={"status_code": 200})
+    res = evaluate_http(check_def, "Error", "", 500)
+    assert res.status == Status.CRITICAL
+    assert "500" in res.summary
+
+def test_evaluate_http_fail_connection():
+    check_def = CheckDefinition(id="h1", name="HTTP", type="http")
+    res = evaluate_http(check_def, "", "Connection refused", -1)
+    assert res.status == Status.CRITICAL
+    assert "Connection failed" in res.summary
+
+def test_evaluate_http_with_rules():
+    check_def = CheckDefinition(
+        id="h1", 
+        name="HTTP", 
+        type="http", 
+        rules=[Rule(type="contains", pattern="HEALTHY")]
+    )
+    res = evaluate_http(check_def, '{"status": "HEALTHY"}', "", 200)
+    assert res.status == Status.OK
+    
+    res2 = evaluate_http(check_def, '{"status": "SICK"}', "", 200)
     assert res2.status == Status.CRITICAL

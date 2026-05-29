@@ -39,6 +39,15 @@ Example `systems.json`:
         "rules": [
           {"type": "contains", "pattern": "RUNNING"}
         ]
+      },
+      {
+        "id": "web-health",
+        "name": "Web Server Health",
+        "type": "http",
+        "params": {
+          "url": "http://10.0.0.5:8080/health",
+          "status_code": 200
+        }
       }
     ]
   }
