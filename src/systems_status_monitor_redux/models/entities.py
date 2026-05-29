@@ -23,7 +23,7 @@ class Rule(BaseModel):
 class CheckDefinition(BaseModel):
     id: str
     name: str
-    type: str  # "time", "disk", "custom"
+    type: str  # "time", "disk", "custom", "http"
     command: Optional[str] = None
     params: Dict[str, Any] = Field(default_factory=dict)
     rules: List[Rule] = Field(default_factory=list)

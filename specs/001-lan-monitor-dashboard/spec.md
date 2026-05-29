@@ -39,11 +39,11 @@ As an operator, I want a “Refresh All” action to immediately re-check all mo
 
 ### User Story 3 - Configure checks per system (Priority: P3)
 
-As an operator, I want to configure which checks run per system (time, disk free by drive letter, and custom command checks with output-based rules), so the dashboard reflects each system’s role and constraints.
+As an operator, I want to configure which checks run per system (time, disk free by drive letter, custom command checks with output-based rules, and HTTP GET requests for server health), so the dashboard reflects each system’s role and constraints.
 
 **Why this priority**: Different systems require different validation; the solution must support per-system customization, including legacy compatibility.
 
-**Independent Test**: Configure System A with a disk check and System B with a custom command check; verify each system’s status box only shows its configured checks and evaluates status correctly.
+**Independent Test**: Configure System A with a disk check and System B with a custom command check and an HTTP GET check; verify each system’s status box only shows its configured checks and evaluates status correctly.
 
 **Acceptance Scenarios**:
 
@@ -84,6 +84,8 @@ As an operator, I want to configure which checks run per system (time, disk free
 - **FR-013**: System MUST support password-based access for monitored systems without exposing passwords in the user interface or logs.
 - **FR-014**: System MUST be designed so that adding key-based access in the future does not require rewriting the feature requirements or changing the dashboard user experience.
 - **FR-015**: System MUST handle partial and stale results: if results are older than a configurable staleness window, the system MUST indicate that the displayed state may be out of date.
+- **FR-016**: System MUST support HTTP GET checks to verify the status of software servers.
+- **FR-017**: HTTP GET checks MUST evaluate success based on (a) successful connection/response and (b) optional status code or content-based rules.
 
 ### Key Entities *(include if feature involves data)*
 

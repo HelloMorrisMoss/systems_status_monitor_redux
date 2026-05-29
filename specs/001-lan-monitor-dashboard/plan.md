@@ -7,7 +7,7 @@
 
 ## Summary
 
-Build a dashboard to monitor LAN systems (primarily Windows, including legacy) via SSH. The system will query system time, disk space (via WMIC), and custom command statuses. Results will be rolled up into a visual dashboard with "Refresh All" capabilities. The technical approach uses Python 3.11, FastAPI for the web layer, and Paramiko for SSH communication, ensuring compatibility with older Windows environments by using legacy-friendly commands.
+Build a dashboard to monitor LAN systems (primarily Windows, including legacy) via SSH and HTTP. The system will query system time, disk space (via WMIC), custom command statuses, and software server health via HTTP GET requests. Results will be rolled up into a visual dashboard with "Refresh All" capabilities. The technical approach uses Python 3.11, FastAPI for the web layer, and Paramiko for SSH communication, ensuring compatibility with older Windows environments by using legacy-friendly commands.
 
 ## Technical Context
 

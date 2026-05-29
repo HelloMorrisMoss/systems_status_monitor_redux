@@ -67,6 +67,11 @@ This document translates the plan and design into actionable, verifiable tasks. 
 - DoD: Unit tests for rule combinations; large output safely truncated in `details`
 - Refs: FR-008, FR-009, Edge Case (large output)
 
+3.4 HTTP GET evaluator
+- Evaluate pass/fail by (a) connection success, (b) status code (default 200), (c) rules on response body
+- DoD: Unit tests for success, 404, 500, and content rules; timeouts handled
+- Refs: FR-016, FR-017
+
 ## 4. State Store & Scheduler
 
 4.1 In-memory StatusStore
@@ -178,6 +183,8 @@ This document translates the plan and design into actionable, verifiable tasks. 
 - FR-013 → Task 7.1
 - FR-014 → Task 10 (design paths)
 - FR-015 → Task 6.2
+- FR-016 → Task 3.4
+- FR-017 → Task 3.4
 - SC-001 → Task 5.2
 - SC-002 → Tasks 4.3, 5.1
 - SC-003 → Tasks 3.2 tests

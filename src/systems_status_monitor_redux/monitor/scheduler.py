@@ -1,5 +1,6 @@
 import threading
 import logging
+import httpx
 from datetime import datetime
 from typing import List, Optional
 from systems_status_monitor_redux.models.entities import MonitoredSystem, SystemStatusSummary, CheckResult, Status, FailureCategory
@@ -62,39 +63,64 @@ class MonitorScheduler:
         results = []
         failure_category = FailureCategory.NONE
         
-        with SSHClientWrapper(system.address, system.username, system.password.get_secret_value()) as client:
-            success, category, msg = client.connect()
-            if not success:
-                summary = SystemStatusSummary(
-                    system_id=system.id,
-                    overall_status=Status.CRITICAL,
-                    last_checked=datetime.utcnow(),
-                    check_results=[],
-                    failure_category=category or FailureCategory.CHECK_FAILED
-                )
-                store.update_system_status(summary)
-                return
-
-            for check_def in system.checks:
-                cmd = get_check_command(check_def.type, check_def.command)
-                exit_status, stdout, stderr = client.execute(cmd)
-                
-                evaluator = get_evaluator(check_def.type)
-                if evaluator:
-                    res = evaluator(check_def, stdout, stderr, exit_status)
-                    results.append(res)
-                else:
+        # 1. Handle HTTP checks (independent of SSH)
+        for check_def in system.checks:
+            if check_def.type == "http":
+                url = check_def.params.get("url")
+                if not url:
                     results.append(CheckResult(
                         check_id=check_def.id,
                         status=Status.UNKNOWN,
-                        summary=f"Unknown check type: {check_def.type}"
+                        summary="Missing 'url' parameter for http check"
                     ))
+                    continue
+                
+                try:
+                    timeout = check_def.params.get("timeout", 5.0)
+                    response = httpx.get(url, timeout=timeout, follow_redirects=True)
+                    evaluator = get_evaluator("http")
+                    results.append(evaluator(check_def, response.text, "", response.status_code))
+                except httpx.RequestError as exc:
+                    evaluator = get_evaluator("http")
+                    results.append(evaluator(check_def, "", str(exc), -1))
+
+        # 2. Handle SSH-based checks
+        ssh_checks = [c for c in system.checks if c.type != "http"]
+        if ssh_checks:
+            with SSHClientWrapper(system.address, system.username, system.password.get_secret_value()) as client:
+                success, category, msg = client.connect()
+                if not success:
+                    # If SSH fails, and we have SSH checks, we need to report that failure
+                    # If we already had some results (from HTTP), we append SSH failure results
+                    for check_def in ssh_checks:
+                        results.append(CheckResult(
+                            check_id=check_def.id,
+                            status=Status.CRITICAL,
+                            summary=f"SSH Connection failed: {category}",
+                            details=msg
+                        ))
+                    failure_category = category or FailureCategory.CHECK_FAILED
+                else:
+                    for check_def in ssh_checks:
+                        cmd = get_check_command(check_def.type, check_def.command)
+                        exit_status, stdout, stderr = client.execute(cmd)
+                        
+                        evaluator = get_evaluator(check_def.type)
+                        if evaluator:
+                            res = evaluator(check_def, stdout, stderr, exit_status)
+                            results.append(res)
+                        else:
+                            results.append(CheckResult(
+                                check_id=check_def.id,
+                                status=Status.UNKNOWN,
+                                summary=f"Unknown check type: {check_def.type}"
+                            ))
 
         summary = SystemStatusSummary(
             system_id=system.id,
-            overall_status=rollup_status(results),
+            overall_status=rollup_status(results) if results else Status.UNKNOWN,
             last_checked=datetime.utcnow(),
             check_results=results,
-            failure_category=FailureCategory.NONE
+            failure_category=failure_category
         )
         store.update_system_status(summary)
