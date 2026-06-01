@@ -7,6 +7,9 @@ from fastapi import Request
 
 def configure_logging(level: int = logging.INFO) -> None:
     logging.basicConfig(level=level, format="%(message)s")
+    # these are noisy
+    logging.getLogger('paramiko').setLevel(logging.WARNING)
+    logging.getLogger('httpcore').setLevel(logging.WARNING)
 
 
 def json_log(**fields) -> None:
