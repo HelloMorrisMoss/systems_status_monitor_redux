@@ -74,18 +74,18 @@ class MonitorScheduler:
                         summary="Missing 'url' parameter for http check"
                     ))
                     continue
-                
+
                 try:
                     timeout = check_def.params.get("timeout", 5.0)
                     proxy = check_def.params.get("proxy")
-                    
-                    # If no proxy is specified, we disable trust_env to bypass system proxies 
-                    # for internal monitoring checks. This replaces the previous fragile 
+
+                    # If no proxy is specified, we disable trust_env to bypass system proxies
+                    # for internal monitoring checks. This replaces the previous fragile
                     # os.environ['NO_PROXY'] workaround with a thread-safe approach.
                     response = httpx.get(
-                        url, 
-                        timeout=timeout, 
-                        follow_redirects=True, 
+                        url,
+                        timeout=timeout,
+                        follow_redirects=True,
                         proxy=proxy,
                         trust_env=(proxy is not None)
                     )
@@ -117,7 +117,7 @@ class MonitorScheduler:
                     for check_def in ssh_checks:
                         cmd = get_check_command(check_def.type, check_def.command)
                         exit_status, stdout, stderr = client.execute(cmd)
-                        
+
                         evaluator = get_evaluator(check_def.type)
                         if evaluator:
                             res = evaluator(check_def, stdout, stderr, exit_status)
