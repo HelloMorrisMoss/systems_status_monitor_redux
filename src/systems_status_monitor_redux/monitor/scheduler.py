@@ -77,12 +77,18 @@ class MonitorScheduler:
                 
                 try:
                     timeout = check_def.params.get("timeout", 5.0)
-                    if this_proxy:=check_def.params.get('proxy', None) is None:
-                        import os
-                        if (address:=url[:url.index(':', 6)]) not in (norpox:=os.environ.get('NO_PROXY', '')):
-                            os.environ['NO_PROXY'] = f"{norpox},{address}"
-                            logger.debug(f"Set NO_PROXY to {os.environ['NO_PROXY']}")
-                    response = httpx.get(url, timeout=timeout, follow_redirects=True)
+                    proxy = check_def.params.get("proxy")
+                    
+                    # If no proxy is specified, we disable trust_env to bypass system proxies 
+                    # for internal monitoring checks. This replaces the previous fragile 
+                    # os.environ['NO_PROXY'] workaround with a thread-safe approach.
+                    response = httpx.get(
+                        url, 
+                        timeout=timeout, 
+                        follow_redirects=True, 
+                        proxy=proxy,
+                        trust_env=(proxy is not None)
+                    )
                     logger.debug(f"HTTP GET {url} returned {response.status_code}: {response.text[:100]}...")
                     evaluator = get_evaluator("http")
                     results.append(evaluator(check_def, response.text, "", response.status_code))
