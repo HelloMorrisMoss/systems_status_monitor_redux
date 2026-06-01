@@ -1,232 +1,202 @@
-**Propagated**: 2026-06-01 — Updated from spec.md refinement
+# Tasks — LAN Monitor Dashboard
 
-# Phase 2: Task Breakdown — LAN Monitor Dashboard
+**Propagated**: 2026-06-01 — Formatted according to speckit standard
 
-This document translates the plan and design into actionable, verifiable tasks. Each task includes Definition of Done (DoD) and references to Functional Requirements (FR) and Success Criteria (SC) from `spec.md`.
+This document translates the plan and design into actionable, verifiable tasks. Each task includes references to Functional Requirements (FR) and Success Criteria (SC) from `spec.md`.
 
-## 0. Foundations & Project Scaffolding
+## Format: `[ID] [P?] [Story] Description`
 
-0.1 Create source tree and bootstrap app (Option 1: Single Project)
-- Paths: `src/`, `src/models/`, `src/monitor/`, `src/api/`, `src/templates/`, `src/utils/`, `tests/unit/`, `tests/integration/`
-- Add `src/main.py` with a minimal FastAPI app and `/health` returning `{status: healthy, version}`
-- DoD: App starts with `uvicorn src.main:app` or `python -m src.main`; `/health` returns 200 and JSON; structure matches plan
-- Refs: FR-001 (indirect), Constitution Health
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 
-0.2 Dependency management
-- Add `requirements.txt` (fastapi, uvicorn, paramiko, jinja2, pydantic>=2, pytest)
-- Pin Python to 3.11 in docs; add `pytest.ini` basic config
-- DoD: `pip install -r requirements.txt` succeeds; versions documented in `quickstart.md`
-- Refs: Constitution V. Compatibility
+---
 
-0.3 Logging & config helpers
-- Implement `src/utils/logging.py` for structured logs (ts, level, message, path, status, latency)
-- Implement `src/utils/config.py` (env vars with safe defaults: host=127.0.0.1, port=8000, refresh_interval=30s, staleness_window=120s)
-- DoD: Logs appear per request; secrets are redacted; config documented
-- Refs: Constitution IV (Observability), II (Secure)
+## Phase 1: Setup (Shared Infrastructure)
 
-## 1. Models & Contracts
+**Purpose**: Project initialization and basic structure
 
-1.1 Pydantic models for core entities
-- Implement `MonitoredSystem`, `CheckDefinition`, `Rule`, `CheckResult`, `SystemStatusSummary`
-- Include enums for Status: OK, WARNING, CRITICAL, UNKNOWN; FailureCategory: unreachable, auth_failed, timeout, check_failed
-- DoD: Models validated by unit tests; JSON serialization aligns with `contracts/api.md`
-- Refs: FR-001, FR-003, FR-012
+- [x] T001 Create source tree and bootstrap app in `src/`, `tests/` (Refs: FR-001)
+- [x] T002 Implement basic FastAPI app with `/health` in `src/systems_status_monitor_redux/main.py`
+- [x] T003 Setup dependency management in `requirements.txt` and `pyproject.toml` (Refs: Constitution V)
+- [x] T004 [P] Implement structured logging in `src/systems_status_monitor_redux/utils/logging.py` (Refs: Constitution IV)
+- [x] T005 [P] Implement configuration handling in `src/systems_status_monitor_redux/utils/config.py` (Refs: Constitution II)
 
-1.2 Config source for systems
-- Provide `systems.json` loader in `src/models/config_loader.py`
-- Support fields: name, address, username, password, checks[]
-- DoD: Loader validates and returns list of `MonitoredSystem`; bad config yields actionable error
-- Refs: FR-001, FR-013
+---
 
-## 2. SSH Client & Execution Layer
+## Phase 2: Foundational (Blocking Prerequisites)
 
-2.1 Paramiko wrapper
-- `src/monitor/ssh_client.py`: connect(host, username, password, timeout); exec(cmd, timeout); redact secrets in errors; detect basic shell or run via `cmd /c`
-- DoD: Unit tests with paramiko mocked; timeouts enforced; error categories surfaced
-- Refs: FR-012, Constitution III, Minimum Timeouts
+**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
 
-2.2 Command presets for checks (Windows/legacy friendly)
-- Time: `time /T` (fallback `echo %DATE% %TIME%`)
-- Disk: `wmic logicaldisk get caption,freespace,size`
-- Custom: pass-through command string (user supplied)
-- DoD: Presets returned by helper with docstrings; covered by tests
-- Refs: FR-005, FR-006, FR-008
+- [x] T006 Implement Pydantic models for core entities in `src/systems_status_monitor_redux/models/entities.py` (Refs: FR-001, FR-003, FR-012)
+- [x] T007 Implement system config loader in `src/systems_status_monitor_redux/models/config_loader.py` (Refs: FR-001, FR-013)
+- [x] T008 Implement Paramiko SSH client wrapper in `src/systems_status_monitor_redux/monitor/ssh_client.py` (Refs: FR-012, Constitution III)
+- [x] T009 Implement in-memory state store in `src/systems_status_monitor_redux/monitor/store.py` (Refs: FR-003, FR-004, FR-015)
+- [x] T010 [P] Implement secret redaction and 127.0.0.1 default binding in `src/systems_status_monitor_redux/utils/config.py` (Refs: FR-013, Constitution II)
 
-## 3. Evaluators (Output → CheckResult)
+**Checkpoint**: Foundation ready - user story implementation can now begin
 
-3.1 Time evaluator
-- Parse `time /T` or `%DATE% %TIME%` output; set status OK and summary string; UNKNOWN on parse failure
-- DoD: Unit tests for typical locales and edge cases
-- Refs: FR-005
+---
 
-3.2 Disk evaluator
-- Parse `wmic logicaldisk` into per-drive metrics; apply thresholds from `CheckDefinition.params` (warning, critical); summarize `XGB free / YGB total`
-- DoD: Unit tests for OK, WARNING, CRITICAL; robust to missing drives
-- Refs: FR-006, FR-007, SC-003
+## Phase 3: User Story 1 - See current status at a glance (Priority: P1) 🎯 MVP
 
-3.3 Custom command evaluator
-- Evaluate pass/fail by (a) nonzero exit → fail, (b) rules on stdout/stderr (contains/not_contains/regex)
-- DoD: Unit tests for rule combinations; large output safely truncated in `details`
-- Refs: FR-008, FR-009, Edge Case (large output)
+**Goal**: As an operator, I want a single dashboard page that shows one status box per monitored system and the status of each configured check.
 
-3.4 HTTP GET evaluator
-- Evaluate pass/fail by (a) connection success, (b) status code (default 200), (c) rules on response body
-- DoD: Unit tests for success, 404, 500, and content rules; timeouts handled
-- Refs: FR-016, FR-017
+**Independent Test**: Configure at least two systems with at least one check each; open the dashboard and verify each system has its own box showing overall status plus per-check statuses.
 
-## 4. State Store & Scheduler
+- [x] T011 [US1] Implement API routes for current status in `src/systems_status_monitor_redux/main.py` (Refs: FR-003, FR-004)
+- [x] T012 [US1] Create Jinja2 HTML dashboard template in `src/systems_status_monitor_redux/templates/dashboard.html` (Refs: FR-002, SC-001)
+- [x] T013 [US1] Implement background monitor scheduler in `src/systems_status_monitor_redux/monitor/scheduler.py` (Refs: FR-010)
+- [x] T014 [US1] Implement failure categorization logic in `src/systems_status_monitor_redux/monitor/store.py` (Refs: FR-012, SC-004)
+- [x] T015 [US1] Implement result staleness tracking in `src/systems_status_monitor_redux/monitor/store.py` and UI indicators in `src/systems_status_monitor_redux/templates/dashboard.html` (Refs: FR-015)
+- [x] T016 [P] [US1] Add minimal CSS for status distinguishing in `src/systems_status_monitor_redux/static/dashboard.css`
 
-4.1 In-memory StatusStore
-- Map `system_id -> SystemStatusSummary` with per-check `CheckResult`; track `last_checked` and `overall` (worst-of rule)
-- DoD: Unit tests for roll-up logic and partial results handling
-- Refs: FR-003, FR-004, FR-015
+**Checkpoint**: User Story 1 functional and testable independently.
 
-4.2 Background scheduler
-- `src/monitor/scheduler.py`: periodic refresh at `refresh_interval`; graceful error handling; cancel on shutdown
-- DoD: Integration test with fake clock or short interval; no unbounded waits
-- Refs: FR-010, Constitution Timeouts
+---
 
-4.3 Manual refresh trigger
-- Expose function to enqueue immediate refresh across all systems
-- DoD: Integration test verifies `last_checked` updates promptly
-- Refs: FR-011, SC-002
+## Phase 4: User Story 2 - Refresh now to confirm recovery (Priority: P2)
 
-## 5. API & Dashboard
+**Goal**: As an operator, I want a “Refresh All” action to immediately re-check all monitored systems.
 
-5.1 API routes
-- `GET /health`: liveness
-- `GET /api/status`: current statuses (as per `contracts/api.md`)
-- `POST /api/refresh`: 202 Accepted; starts immediate refresh
-- DoD: Contract tests for shapes/fields; error handling with safe messages
-- Refs: Contracts, FR-011, Constitution
+**Independent Test**: Cause a check to change state; trigger Refresh All; verify the “last checked” time and visible statuses update.
 
-5.2 HTML dashboard
-- `GET /`: Jinja2 template renders one box per system; per-check statuses; overall status color; last checked
-- DoD: Manual test renders sample `systems.json`; UI shows mixed states and failure categories
-- Refs: FR-002, FR-003, FR-012, SC-001
+- [x] T017 [US2] Implement manual refresh trigger in `src/systems_status_monitor_redux/monitor/scheduler.py` (Refs: FR-011)
+- [x] T018 [US2] Add API endpoint `POST /api/refresh` to trigger immediate scan (Refs: FR-011, SC-002)
+- [x] T019 [US2] Add refresh button to `src/systems_status_monitor_redux/templates/dashboard.html` (Refs: FR-011)
 
-5.3 Static styles
-- Minimal CSS embedded or small file; statuses clearly distinguished
-- DoD: Visual clarity for OK/WARNING/CRITICAL/UNKNOWN; partial results evident
-- Refs: Edge Cases (partial success)
+---
 
-## 6. Failure Categories & Staleness
+## Phase 5: User Story 3 - Configure checks per system (Priority: P3)
 
-6.1 Failure categorization
-- Map connection/auth/timeout/exec errors to non-sensitive categories; surface in UI and `/api/status`
-- DoD: Unit tests for mapping; UI shows category label
-- Refs: FR-012, SC-004
+**Goal**: Support time, disk, custom command, and HTTP GET checks per system.
 
-6.2 Staleness indicator
-- If `now - last_checked > staleness_window`, mark summary as stale; display warning badge
-- DoD: Unit test + UI check
-- Refs: FR-015
+**Independent Test**: Configure System A with disk check and System B with custom check; verify each shows only its configured checks.
 
-## 7. Security & Privacy
+- [x] T020 [US3] Implement command presets for Windows checks (Time, Disk, cmd /c fallbacks) in `src/systems_status_monitor_redux/monitor/commands.py` (Refs: FR-005, FR-006)
+- [x] T021 [P] [US3] Implement Time check evaluator in `src/systems_status_monitor_redux/monitor/evaluators.py` (Refs: FR-005)
+- [x] T022 [P] [US3] Implement Disk check evaluator in `src/systems_status_monitor_redux/monitor/evaluators.py` (Refs: FR-006, FR-007, SC-003)
+- [x] T023 [P] [US3] Implement Custom command evaluator with stdout rules and output truncation in `src/systems_status_monitor_redux/monitor/evaluators.py` (Refs: FR-008, FR-009)
+- [x] T024 [P] [US3] Implement HTTP GET check evaluator in `src/systems_status_monitor_redux/monitor/evaluators.py` (Refs: FR-016, FR-017)
 
-7.1 Secret handling
-- Never log passwords; redact in errors and request logs; config loader ensures secrets omitted from serialized responses
-- DoD: Grep check in tests to ensure no secret leakage; code review checklist
-- Refs: FR-013, Constitution II
+---
 
-7.2 Local-only default binding
-- Bind to `127.0.0.1` unless `BIND_HOST` overridden
-- DoD: Verified in `quickstart.md`; startup logs state bind address
-- Refs: Constitution II
+## Phase 6: User Story 4 - Detailed documentation for checks (Priority: P4)
 
-## 8. Testing Plan
+**Goal**: Provide detailed documentation for each supported check type with clear examples.
 
-8.1 Unit tests
-- Models validation, evaluators (time/disk/custom), roll-up logic, failure mapping, truncation
-- DoD: `pytest -q` passes locally; coverage for core paths
+**Independent Test**: Navigate to each check's README; verify description, parameters, and example exist.
 
-8.2 Integration tests
-- API with FastAPI `TestClient`; mock SSH client to produce OK/WARN/CRIT/unreachable/auth_failed/timeouts
-- DoD: Endpoints return as contracted; refresh updates timestamps within 60s simulated
-- Refs: SC-002, Contracts
+- [ ] T025 [P] [US4] Create detailed documentation for `time` check in `specs/001-lan-monitor-dashboard/docs/checks/time.md` (Refs: FR-018, FR-019)
+- [ ] T026 [P] [US4] Create detailed documentation for `disk` check in `specs/001-lan-monitor-dashboard/docs/checks/disk.md` (Refs: FR-018, FR-019)
+- [ ] T027 [P] [US4] Create detailed documentation for `custom` check in `specs/001-lan-monitor-dashboard/docs/checks/custom.md` (Refs: FR-018, FR-019)
+- [ ] T028 [P] [US4] Create detailed documentation for `http` check in `specs/001-lan-monitor-dashboard/docs/checks/http.md` (Refs: FR-018, FR-019, SC-006)
+- [ ] T029 [US4] Link detailed check documentation in root `README.md` (Refs: FR-018)
 
-8.3 Operational checks
-- Ensure `/health` unchanged behavior; manual dashboard walkthrough using sample `systems.json`
-- DoD: Checklist completed and documented
+---
 
-## 9. Documentation & Ops
+## Phase 7: Polish & Cross-Cutting Concerns
 
-9.1 Update `quickstart.md`
-- Add instructions for `systems.json` location, env vars, run commands, and Refresh All usage
-- DoD: Follow doc to run from clean checkout in <10 minutes
-- Refs: SC-005
+**Purpose**: Final documentation, testing, and operational readiness.
 
-9.2 Add `README` section or link to specs
-- Brief feature overview and known limitations (no persistence, password-only for now)
-- DoD: Section present; limitations explicit
+- [x] T030 [P] Update `quickstart.md` with usage instructions (Refs: SC-005)
+- [x] T031 [P] Document design for future key-based auth and known limitations in `README.md` (Refs: FR-014, FR-013)
+- [x] T032 [P] Implement unit tests for evaluators and models in `tests/unit/` (Refs: SC-003)
+- [x] T033 [P] Implement integration tests for API and scheduler in `tests/integration/` (Refs: SC-002)
+- [x] T034 Perform final operational checks and manual dashboard walkthrough
 
-## 10. Stretch (Post-MVP, optional)
+---
 
-- Key-based auth support plumbing (config fields, not wired) — Refs: FR-014 (design for future)
-- `/ready` readiness endpoint
-- Service status helper via `sc query` and `tasklist`
-- Configurable per-check timeouts
-- CSV/JSON export of current status
+## Phase 8: Stretch Goals (Optional)
 
-## 11. Detailed Check Documentation
+**Purpose**: Post-MVP enhancements and future-proofing.
 
-11.1 Create detailed documentation for `time` check
-- Path: `specs/001-lan-monitor-dashboard/docs/checks/time.md`
-- Include: Description, configuration parameters, boilerplate example system
-- DoD: File exists and follows structure from FR-019
-- Refs: FR-018, FR-019
+- [ ] T035 [P] Support key-based auth plumbing in `src/systems_status_monitor_redux/models/entities.py` (Refs: FR-014)
+- [ ] T036 [P] Implement service status helper via `sc query` in `src/systems_status_monitor_redux/monitor/commands.py`
+- [ ] T037 [P] Add configurable per-check timeouts in `src/systems_status_monitor_redux/models/entities.py`
+- [ ] T038 Implement CSV/JSON export of current status in `src/systems_status_monitor_redux/main.py`
 
-11.2 Create detailed documentation for `disk` check
-- Path: `specs/001-lan-monitor-dashboard/docs/checks/disk.md`
-- DoD: File exists and follows structure from FR-019
-- Refs: FR-018, FR-019
+---
 
-11.3 Create detailed documentation for `custom` check
-- Path: `specs/001-lan-monitor-dashboard/docs/checks/custom.md`
-- DoD: File exists and follows structure from FR-019
-- Refs: FR-018, FR-019
+## Dependencies & Execution Order
 
-11.4 Create detailed documentation for `http` check
-- Path: `specs/001-lan-monitor-dashboard/docs/checks/http.md`
-- DoD: File exists and follows structure from FR-019
-- Refs: FR-018, FR-019, SC-006
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies.
+- **Foundational (Phase 2)**: Depends on Setup completion.
+- **User Stories (Phase 3-6)**: All depend on Foundational phase completion.
+- **Polish (Phase 7)**: Depends on all desired user stories being complete.
+- **Stretch Goals (Phase 8)**: Depends on Phase 7 completion (optional).
+
+### User Story Dependencies
+
+- **User Story 1 (P1)**: Foundation ready.
+- **User Story 2 (P2)**: Foundation ready + US1 (for UI).
+- **User Story 3 (P3)**: Foundation ready.
+- **User Story 4 (P4)**: User Story 3 complete.
+
+---
+
+## Parallel Execution Examples
+
+```bash
+# Implementation of evaluators can happen in parallel
+Task: "T021 [P] [US3] Implement Time check evaluator in src/systems_status_monitor_redux/monitor/evaluators.py"
+Task: "T022 [P] [US3] Implement Disk check evaluator in src/systems_status_monitor_redux/monitor/evaluators.py"
+Task: "T023 [P] [US3] Implement Custom command evaluator with stdout rules and output truncation in src/systems_status_monitor_redux/monitor/evaluators.py"
+Task: "T024 [P] [US3] Implement HTTP GET check evaluator in src/systems_status_monitor_redux/monitor/evaluators.py"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1 & 2.
+2. Complete Phase 3 (US1).
+3. **STOP and VALIDATE**: Test User Story 1 independently.
 
 ---
 
 ## Acceptance Matrix (traceability)
 
-- FR-001 → Tasks 1.1, 1.2, 5.2
-- FR-002 → Task 5.2
-- FR-003 → Tasks 4.1, 5.2
-- FR-004 → Tasks 4.1, 5.1/5.2 display
-- FR-005 → Tasks 2.2, 3.1
-- FR-006/FR-007 → Tasks 2.2, 3.2
-- FR-008/FR-009 → Tasks 3.3
-- FR-010 → Task 4.2
-- FR-011 → Tasks 4.3, 5.1 (`POST /api/refresh`)
-- FR-012 → Tasks 2.1, 6.1, 5.2
-- FR-013 → Task 7.1
-- FR-014 → Task 10 (design paths)
-- FR-015 → Task 6.2
-- FR-016 → Task 3.4
-- FR-017 → Task 3.4
-- FR-018 → Tasks 11.1-11.4
-- FR-019 → Tasks 11.1-11.4
-- SC-001 → Task 5.2
-- SC-002 → Tasks 4.3, 5.1
-- SC-003 → Tasks 3.2 tests
-- SC-004 → Tasks 6.1 + UI
-- SC-005 → Tasks 9.1
-- SC-006 → Tasks 11.4
+- FR-001 → T001, T006, T007
+- FR-002 → T012
+- FR-003 → T006, T009, T011
+- FR-004 → T009, T011
+- FR-005 → T020, T021
+- FR-006 → T020, T022
+- FR-007 → T022
+- FR-008 → T023
+- FR-009 → T023
+- FR-010 → T013
+- FR-011 → T017, T018, T019
+- FR-012 → T006, T008, T014
+- FR-013 → T007, T010
+- FR-014 → T031
+- FR-015 → T009, T015
+- FR-016 → T024
+- FR-017 → T024
+- FR-018 → T025, T026, T027, T028, T029
+- FR-019 → T025, T026, T027, T028
+- SC-001 → T012
+- SC-002 → T018, T033
+- SC-003 → T022, T032
+- SC-004 → T014
+- SC-005 → T030
+- SC-006 → T028
+
+---
 
 ## Milestones
 
-- M1: Foundations running (`/health`), scaffolding, deps (Tasks 0.x) — 0.5 day
-- M2: Models, SSH client, evaluators (Tasks 1–3) — 1.5–2 days
-- M3: State store + scheduler + refresh (Tasks 4.x) — 1 day
-- M4: API + Dashboard UI (Tasks 5.x) — 1 day
-- M5: Failure categories + staleness + tests (Tasks 6–8) — 1 day
-- M6: Docs + polish (Tasks 9.x) — 0.5 day
-- M7: Detailed Check Documentation (Tasks 11.x) — 0.5 day
+- M1: Foundations running (`/health`), scaffolding, deps (T001-T005) — COMPLETED
+- M2: Models, SSH client, state store (T006-T010) — COMPLETED
+- M3: Core Dashboard & Scheduler (T011-T016) — COMPLETED
+- M4: Refresh Functionality (T017-T019) — COMPLETED
+- M5: Multi-check Support (T020-T024) — COMPLETED
+- M6: Detailed Documentation (T025-T029) — IN PROGRESS
+- M7: Final Polish & Testing (T030-T034) — COMPLETED (base implementation)
+- M8: Stretch Goals (T035-T038) — NOT STARTED
 
-Total MVP estimate: ~5.5 days (single engineer), excluding stretch goals.
+Total MVP estimate: ~5.5 days (single engineer).
