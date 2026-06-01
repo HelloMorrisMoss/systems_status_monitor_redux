@@ -86,11 +86,11 @@ This document translates the plan and design into actionable, verifiable tasks. 
 
 **Independent Test**: Navigate to each check's README; verify description, parameters, and example exist.
 
-- [ ] T025 [P] [US4] Create detailed documentation for `time` check in `specs/001-lan-monitor-dashboard/docs/checks/time.md` (Refs: FR-018, FR-019)
-- [ ] T026 [P] [US4] Create detailed documentation for `disk` check in `specs/001-lan-monitor-dashboard/docs/checks/disk.md` (Refs: FR-018, FR-019)
-- [ ] T027 [P] [US4] Create detailed documentation for `custom` check in `specs/001-lan-monitor-dashboard/docs/checks/custom.md` (Refs: FR-018, FR-019)
-- [ ] T028 [P] [US4] Create detailed documentation for `http` check in `specs/001-lan-monitor-dashboard/docs/checks/http.md` (Refs: FR-018, FR-019, SC-006)
-- [ ] T029 [US4] Link detailed check documentation in root `README.md` (Refs: FR-018)
+- [x] T025 [P] [US4] Create detailed documentation for `time` check in `specs/001-lan-monitor-dashboard/docs/checks/time.md` (Refs: FR-018, FR-019)
+- [x] T026 [P] [US4] Create detailed documentation for `disk` check in `specs/001-lan-monitor-dashboard/docs/checks/disk.md` (Refs: FR-018, FR-019)
+- [x] T027 [P] [US4] Create detailed documentation for `custom` check in `specs/001-lan-monitor-dashboard/docs/checks/custom.md` (Refs: FR-018, FR-019)
+- [x] T028 [P] [US4] Create detailed documentation for `http` check in `specs/001-lan-monitor-dashboard/docs/checks/http.md` (Refs: FR-018, FR-019, SC-006)
+- [x] T029 [US4] Link detailed check documentation in root `README.md` (Refs: FR-018)
 
 ---
 
@@ -195,7 +195,7 @@ Task: "T024 [P] [US3] Implement HTTP GET check evaluator in src/systems_status_m
 - M3: Core Dashboard & Scheduler (T011-T016) — COMPLETED
 - M4: Refresh Functionality (T017-T019) — COMPLETED
 - M5: Multi-check Support (T020-T024) — COMPLETED
-- M6: Detailed Documentation (T025-T029) — IN PROGRESS
+- M6: Detailed Documentation (T025-T029) — COMPLETED
 - M7: Final Polish & Testing (T030-T034) — COMPLETED (base implementation)
 - M8: Stretch Goals (T035-T038) — NOT STARTED
 

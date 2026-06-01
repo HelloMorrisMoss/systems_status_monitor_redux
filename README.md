@@ -62,6 +62,13 @@ uv run systems-status-monitor-redux
 ```
 The dashboard will be available at `http://localhost:8000` or `http://system_address:8000` remotely.
 
+## Check Types
+The following check types are supported:
+- [Time Check](specs/001-lan-monitor-dashboard/docs/checks/time.md): Verifies system time.
+- [Disk Check](specs/001-lan-monitor-dashboard/docs/checks/disk.md): Monitors free space.
+- [Custom Command Check](specs/001-lan-monitor-dashboard/docs/checks/custom.md): Runs any shell command and validates output.
+- [HTTP Check](specs/001-lan-monitor-dashboard/docs/checks/http.md): Validates web server status and response body.
+
 ## Health Check
 Verify the service is running:
 ```powershell
