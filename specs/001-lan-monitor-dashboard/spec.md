@@ -2,7 +2,8 @@
 
 **Feature Branch**: `[001-lan-monitor-dashboard]`  
 **Created**: 2026-02-09  
-**Status**: Draft  
+**Status**: Refined  
+**Refined**: 2026-06-01 — Added requirements for detailed documentation of check types.
 **Input**: User description: "Build a dashboard for monitoring the state of systems on the LAN using SSH to query the system time, free space on their storage drives, and for some check the status of servers running on the system. Each system should have its own box on the dashboard with the status of the items checked. Systems are Windows hosts (including legacy). Roughly 5 systems. Include push button refresh. Password auth now, SSH keys later. Custom commands with stdout rules. Legacy-friendly remote command fallbacks. WMIC available."
 
 ## User Scenarios & Testing *(mandatory)*
@@ -52,6 +53,20 @@ As an operator, I want to configure which checks run per system (time, disk free
 
 ---
 
+### User Story 4 - Detailed documentation for checks (Priority: P4)
+
+As an operator, I want detailed documentation for each type of check (time, disk, custom, and HTTP), including clear examples and configuration parameters, so I can easily set up and troubleshoot monitoring for my systems.
+
+**Why this priority**: Documentation is essential for usability and correct configuration, especially for complex checks like custom commands or HTTP rules.
+
+**Independent Test**: Navigate to the documentation for each check type; verify it includes a description, parameters list, and a boilerplate example system.
+
+**Acceptance Scenarios**:
+
+1. **Given** the documentation is available, **When** the operator views a specific check's README, **Then** they see a clear example configuration that uses a consistent, minimal boilerplate system.
+
+---
+
 ### Edge Cases
 
 - A system can be accessed, but a specific check cannot run due to system differences (older Windows environment, missing utilities, or incompatible command behavior).
@@ -86,6 +101,8 @@ As an operator, I want to configure which checks run per system (time, disk free
 - **FR-015**: System MUST handle partial and stale results: if results are older than a configurable staleness window, the system MUST indicate that the displayed state may be out of date.
 - **FR-016**: System MUST support HTTP GET checks to verify the status of software servers.
 - **FR-017**: HTTP GET checks MUST evaluate success based on (a) successful connection/response and (b) optional status code or content-based rules.
+- **FR-018**: System MUST provide detailed documentation for each supported check type (time, disk, custom, http).
+- **FR-019**: Documentation for each check MUST include a description, configuration parameters, and a clear, minimal example using a consistent boilerplate system.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -103,3 +120,4 @@ As an operator, I want to configure which checks run per system (time, disk free
 - **SC-003**: In validation testing, disk free checks correctly classify at least three threshold situations (OK, warning, critical) across configured drives.
 - **SC-004**: In failure-mode validation, the dashboard presents at least three distinct, non-sensitive failure categories (unreachable, authentication failed, timeout) in a way an operator can act on.
 - **SC-005**: An operator can add a new monitored system with at least one check and see it appear on the dashboard within 10 minutes by following the documentation.
+- **SC-006**: Detailed documentation for all four check types is accessible and follows a consistent structure, including at least one clear example per check.

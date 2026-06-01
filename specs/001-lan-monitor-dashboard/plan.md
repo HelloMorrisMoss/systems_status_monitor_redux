@@ -1,3 +1,5 @@
+**Propagated**: 2026-06-01 — Updated from spec.md refinement
+
 # Implementation Plan: LAN Monitor Dashboard
 
 **Branch**: `[001-lan-monitor-dashboard]` | **Date**: 2026-02-11 | **Spec**: [specs/001-lan-monitor-dashboard/spec.md](spec.md)
@@ -43,8 +45,14 @@ specs/001-lan-monitor-dashboard/
 ├── quickstart.md        # Setup and run instructions
 ├── contracts/           # API definitions
 │   └── api.md
-└── checklists/
-    └── requirements.md
+├── checklists/
+│   └── requirements.md
+└── docs/                # Detailed check documentation (NEW)
+    └── checks/
+        ├── time.md
+        ├── disk.md
+        ├── custom.md
+        └── http.md
 ```
 
 ### Source Code (repository root)

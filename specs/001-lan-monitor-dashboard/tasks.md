@@ -1,3 +1,5 @@
+**Propagated**: 2026-06-01 — Updated from spec.md refinement
+
 # Phase 2: Task Breakdown — LAN Monitor Dashboard
 
 This document translates the plan and design into actionable, verifiable tasks. Each task includes Definition of Done (DoD) and references to Functional Requirements (FR) and Success Criteria (SC) from `spec.md`.
@@ -166,6 +168,29 @@ This document translates the plan and design into actionable, verifiable tasks. 
 - Configurable per-check timeouts
 - CSV/JSON export of current status
 
+## 11. Detailed Check Documentation
+
+11.1 Create detailed documentation for `time` check
+- Path: `specs/001-lan-monitor-dashboard/docs/checks/time.md`
+- Include: Description, configuration parameters, boilerplate example system
+- DoD: File exists and follows structure from FR-019
+- Refs: FR-018, FR-019
+
+11.2 Create detailed documentation for `disk` check
+- Path: `specs/001-lan-monitor-dashboard/docs/checks/disk.md`
+- DoD: File exists and follows structure from FR-019
+- Refs: FR-018, FR-019
+
+11.3 Create detailed documentation for `custom` check
+- Path: `specs/001-lan-monitor-dashboard/docs/checks/custom.md`
+- DoD: File exists and follows structure from FR-019
+- Refs: FR-018, FR-019
+
+11.4 Create detailed documentation for `http` check
+- Path: `specs/001-lan-monitor-dashboard/docs/checks/http.md`
+- DoD: File exists and follows structure from FR-019
+- Refs: FR-018, FR-019, SC-006
+
 ---
 
 ## Acceptance Matrix (traceability)
@@ -185,11 +210,14 @@ This document translates the plan and design into actionable, verifiable tasks. 
 - FR-015 → Task 6.2
 - FR-016 → Task 3.4
 - FR-017 → Task 3.4
+- FR-018 → Tasks 11.1-11.4
+- FR-019 → Tasks 11.1-11.4
 - SC-001 → Task 5.2
 - SC-002 → Tasks 4.3, 5.1
 - SC-003 → Tasks 3.2 tests
 - SC-004 → Tasks 6.1 + UI
 - SC-005 → Tasks 9.1
+- SC-006 → Tasks 11.4
 
 ## Milestones
 
@@ -199,5 +227,6 @@ This document translates the plan and design into actionable, verifiable tasks. 
 - M4: API + Dashboard UI (Tasks 5.x) — 1 day
 - M5: Failure categories + staleness + tests (Tasks 6–8) — 1 day
 - M6: Docs + polish (Tasks 9.x) — 0.5 day
+- M7: Detailed Check Documentation (Tasks 11.x) — 0.5 day
 
-Total MVP estimate: ~5 days (single engineer), excluding stretch goals.
+Total MVP estimate: ~5.5 days (single engineer), excluding stretch goals.
